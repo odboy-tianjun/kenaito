@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.odboy.modules.quartz.mapper.QuartzLogMapper">
+    <select id="findAll" resultType="cn.odboy.modules.quartz.domain.QuartzLog">
+        SELECT *
+        FROM system_quartz_log
+        <where>
+            <if test="criteria.jobName != null and criteria.jobName != ''">
+                AND job_name LIKE CONCAT('%',#{criteria.jobName},'%')
+            </if>
+            <if test="criteria.isSuccess != null">
+                AND is_success = #{criteria.isSuccess}
+            </if>
+            <if test="criteria.createTime != null and criteria.createTime.size() > 0">
+                AND create_time BETWEEN #{criteria.createTime[0]} AND #{criteria.createTime[1]}
+            </if>
+        </where>
+        ORDER BY id DESC
+    </select>
+</mapper>

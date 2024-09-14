@@ -1,0 +1,4 @@
+spring:
+  profiles:
+    # 激活哪个配置文件, application-{active}.yml
+    active: dev

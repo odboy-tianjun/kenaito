@@ -1,0 +1,271 @@
+server:
+  port: 28001
+  http2:
+    # 提高网络传输效率, 默认为false
+    enabled: true
+  undertow:
+    threads:
+      # 工作线程数，默认设置为io-threads * 8。如果你的应用程序有很多同步阻塞操作，可以适当增加这个值
+      worker: 16
+      # 设置IO线程数, 它主要执行非阻塞的任务,它们会负责多个连接, 默认设置每个CPU核心一个线程
+      # 阻塞任务线程池, 当执行类似servlet请求阻塞操作, undertow会从这个线程池中取得线程,它的值设置取决于系统的负载
+      io: 2
+    # 设置为true以使用直接内存（堆外内存）来存储缓冲区。这可以减少垃圾回收的开销。
+    direct-buffers: true
+    # 以下的配置会影响buffer,这些buffer会用于服务器连接的IO操作,有点类似netty的池化内存管理
+    # 每块buffer的空间大小,越小的空间被利用越充分
+    buffer-size: 1024
+    accesslog:
+      # 关闭日志
+      enabled: false
+  compression:
+    # 是否开启压缩
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+  # 启用优雅停机，并遵守spring.lifecycle.timeout-per-shutdown-phase属性中给出的超时
+  # GRACEFUL (优雅): 当应用程序以"GRACEFUL"模式关闭时，它不会接受新的请求且会尝试完成所有正在进行的请求和处理，然后才会终止。这种方式适用于那些可能需要一些时间来清理资源或完成正在进行的任务的场景。
+  # IMMEDIATE(立即): 当应用程序以"IMMEDIATE"模式关闭时，它会立即终止，而不管当前是否有任何活动任务或请求。这种方式适用于那些可以立即停止而不会造成严重问题的情况。
+  shutdown: graceful
+mybatis-plus:
+  configuration:
+    # 开启 Mybatis 二级缓存，默认为 true
+    cache-enabled: false
+    # 设置本地缓存作用域, Mybatis 一级缓存, 默认为 SESSION
+    # 同一个 session 相同查询语句不会再次查询数据库
+    # 微服务中, 建议设置为STATEMENT, 即关闭一级缓存
+    local-cache-scope: STATEMENT
+    # 是否开启自动驼峰命名规则（camel case）映射, 即从经典数据库列名 A_COLUMN（下划线命名） 到经典 Java 属性名 aColumn（驼峰命名） 的类似映射
+    map-underscore-to-camel-case: true
+    # Sql日志
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  # 启动时是否检查 MyBatis XML 文件的存在, 默认不检查
+  check-config-location: true
+  # MyBatis Mapper 所对应的 XML 文件位置
+  # Maven 多模块项目的扫描路径需以 classpath*: 开头 （即加载多个 jar 包下的 XML 文件）
+  mapper-locations: classpath*:/mapper/**/*.xml
+  # MyBatis-Plus 全局策略中的 DB 策略配置
+  global-config:
+    db-config:
+      # 逻辑已删除值(逻辑删除下有效)
+      logic-delete-value: 0
+      # 逻辑未删除值(逻辑删除下有效)
+      logic-not-delete-value: 1
+      # 全局默认主键类型, 这里为自增主键
+      id-type: auto
+      # 表名是否使用驼峰转下划线命名,只对表名生效
+      table-underline: true
+    # 是否控制台 print mybatis-plus 的 LOGO
+    banner: true
+spring:
+  freemarker:
+    # 是否检查模板位置是否存在
+    check-template-location: false
+    # 模板编码
+    charset: utf-8
+  data:
+    redis:
+      repositories:
+        # 是否启用Redis存储(关闭防止出现 Multiple Spring Data modules found, entering strict repository configuration mode)
+        enabled: false
+  lifecycle:
+    # 采用java.time.Duration格式的值,如果在这个时间内，优雅停机没有停掉应用，超过这个时间就会强制停止应用
+    timeout-per-shutdown-phase: 30s
+  # 邮件设置
+  mail:
+    host: smtp.qq.com
+    port: 465
+    username: tianjun@odboy.cn
+    # 邮箱授权码
+    # 如何获取QQ邮箱授权码?
+    # https://service.mail.qq.com/cgi-bin/help?subtype=1&&no=1001256&&id=28
+    password: xxxxxxxxxxxx
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          ssl:
+            trust: smtp.qq.com
+          socketFactory:
+            class: javax.net.ssl.SSLSocketFactory
+            port: 465
+          auth: true
+          starttls:
+            enable: true
+            required: true
+  # 配置数据源
+  datasource:
+    # https://www.cnblogs.com/huanshilang/p/17878948.html
+    druid:
+      db-type: com.alibaba.druid.pool.DruidDataSource
+      # driverClassName: com.mysql.cj.jdbc.Driver   # mysql8 的连接驱动
+      driverClassName: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+      url: jdbc:log4jdbc:mysql://${DB_HOST:kenaito-mysql.odboy.local}:${DB_PORT:13306}/${DB_NAME:kenaito}?serverTimezone=Asia/Shanghai&characterEncoding=utf8&useSSL=false
+      username: ${DB_USER:root}
+      password: ${DB_PWD:root}
+      initial-size: 5  # 初始连接数
+      min-idle: 15 # 最小连接数
+      max-active: 30  # 最大连接数
+      remove-abandoned-timeout: 180  # 超时时间(以秒数为单位)
+      max-wait: 3000 # 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒
+      time-between-eviction-runs-millis: 60000 # 配置一个连接在池中最小生存的时间，单位是毫秒
+      min-evictable-idle-time-millis: 300000 # 连接在池中最小生存的时间
+      max-evictable-idle-time-millis: 900000  # 连接在池中最大生存的时间
+      test-while-idle: true # 如果为true，默认是false，应用向连接池申请连接时，连接池会判断这条连接是否是可用的
+      test-on-borrow: false # 如果为true（默认false），当应用使用完连接，连接池回收连接的时候会判断该连接是否还可用
+      test-on-return: false # 是否缓存preparedStatement，也就是PSCache。PSCache对支持游标的数据库性能提升巨大，比如说oracle
+      validation-query: select 1 # # 应用向连接池申请连接，并且testOnBorrow为false时，连接池将会判断连接是否处于空闲状态，如果是，则验证这条连接是否可用
+      ########## 配置WebStatFilter，用于采集web关联监控的数据 ##########
+      web-stat-filter:
+        enabled: true                   # 启动 StatFilter
+        url-pattern: /*                 # 过滤所有url
+        exclusions: "*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*" # 排除一些不必要的url
+        session-stat-enable: true       # 开启session统计功能
+        session-stat-max-count: 1000    # session的最大个数,默认100
+      ########## 配置StatViewServlet（监控页面），用于展示Druid的统计信息 ##########
+      stat-view-servlet:
+        enabled: true                   # 启用StatViewServlet
+        url-pattern: /druid/*           # 访问内置监控页面的路径，内置监控页面的首页是/druid/index.html
+        reset-enable: false             # 不允许清空统计数据,重新计算
+        allow: 127.0.0.1                # 允许访问的地址，如果allow没有配置或者为空，则允许所有访问
+        deny:                           # 拒绝访问的地址，deny优先于allow，如果在deny列表中，就算在allow列表中，也会被拒绝
+      # 配置监控统计拦截的filter
+      filter:
+        # 开启DruidDatasource的状态监控
+        stat:
+          enabled: true
+          # 开启慢sql监控，超过2s 就认为是慢sql，记录到日志中
+          log-slow-sql: true
+          slow-sql-millis: 2000
+          merge-sql: true
+        wall:
+          config:
+            multi-statement-allow: true
+        slf4j:
+          enabled: true
+          statement-log-error-enabled: true
+          statement-create-after-log-enabled: false
+          statement-close-after-log-enabled: false
+          result-set-open-after-log-enabled: false
+          result-set-close-after-log-enabled: false
+      # Spring 监控，利用aop 对指定接口的执行时间，jdbc数进行记录
+      # https://blog.csdn.net/weixin_39651356/article/details/128168290
+      aop-patterns: "cn.odboy.mapper.*,cn.odboy.modules.*.mapper.*"
+      keep-alive: true
+      max-open-prepared-statements: 20 # 连接池中的minIdle数量以内的连接，空闲时间超过minEvictableIdleTimeMillis，则会执行keepAlive操作
+      pool-prepared-statements: true # 要启用PSCache，max-open-prepared-statements必须配置大于0，当大于0时， poolPreparedStatements自动触发修改为true
+  redis:
+    #数据库索引
+    database: ${REDIS_DB:2}
+    host: ${REDIS_HOST:kenaito-redis.odboy.local}
+    port: ${REDIS_PORT:16379}
+    password: ${REDIS_PWD:123456}
+    #连接超时时间
+    timeout: 5000
+    lettuce:
+      pool:
+        enabled: true
+        max-active: 20
+        min-idle: 0
+        max-wait: 5000ms
+        max-idle: 10
+# 登录相关配置
+login:
+  #  是否限制单用户登录
+  single-login: false
+  # Redis用户登录缓存配置
+  user-cache:
+    # 存活时间/秒
+    idle-time: 21600
+  #  验证码
+  login-code:
+    enabled: false
+    #  验证码类型配置 查看 LoginProperties 类
+    code-type: arithmetic
+    #  登录图形验证码有效时间/分钟
+    expiration: 2
+    #  验证码高度
+    width: 111
+    #  验证码宽度
+    height: 36
+    # 内容长度
+    length: 2
+    # 字体名称，为空则使用默认字体
+    font-name:
+    # 字体大小
+    font-size: 25
+# jwt
+jwt:
+  header: Authorization
+  # 令牌前缀
+  token-start-with: Bearer
+  # 必须使用最少88位的Base64对该令牌进行编码
+  base64-secret: ZmQ0ZGI5NjQ0MDQwY2I4MjMxY2Y3ZmI3MjdhN2ZmMjNhODViOTg1ZGE0NTBjMGM4NDA5NzYxMjdjOWMwYWRmZTBlZjlhNGY3ZTg4Y2U3YTE1ODVkZDU5Y2Y3OGYwZWE1NzUzNWQ2YjFjZDc0NGMxZWU2MmQ3MjY1NzJmNTE0MzI=
+  # 令牌过期时间 此处单位/毫秒 ，默认4小时，可在此网站生成 https://www.convertworld.com/zh-hans/time/milliseconds.html
+  token-validity-in-seconds: 14400000
+  # 在线用户key
+  online-key: "online-token:"
+  # 验证码
+  code-key: "captcha-code:"
+  # token 续期检查时间范围（默认30分钟，单位毫秒），在token即将过期的一段时间内用户操作了，则给用户的token续期
+  detect: 1800000
+  # 续期时间范围，默认1小时，单位毫秒
+  renew: 3600000
+# 是否允许生成代码，生产环境设置为false
+generator:
+  enabled: true
+# 是否开启 swagger-ui
+swagger:
+  enabled: true
+# 文件存储路径
+file:
+  mac:
+    path: ~/file/
+    avatar: ~/avatar/
+  linux:
+    path: /home/kenaito/file/
+    avatar: /home/kenaito/avatar/
+  windows:
+    path: C:\kenaito\file\
+    avatar: C:\kenaito\avatar\
+  # 文件大小 /M
+  maxSize: 100
+  avatarMaxSize: 5
+app:
+  # 密码加密传输, 前端公钥加密, 后端私钥解密
+  # 密钥对生成 http://web.chacuo.net/netrsakeypair
+  # 公钥需要拷贝一份到前端路径下: kenaito-front/src/util/rsaEncrypt.js
+  private-key: MIIBUwIBADANBgkqhkiG9w0BAQEFAASCAT0wggE5AgEAAkEA0vfvyTdGJkdbHkB8mp0f3FE0GYP3AYPaJF7jUd1M0XxFSE2ceK3k2kw20YvQ09NJKk+OMjWQl9WitG9pB6tSCQIDAQABAkA2SimBrWC2/wvauBuYqjCFwLvYiRYqZKThUS3MZlebXJiLB+Ue/gUifAAKIg1avttUZsHBHrop4qfJCwAI0+YRAiEA+W3NK/RaXtnRqmoUUkb59zsZUBLpvZgQPfj1MhyHDz0CIQDYhsAhPJ3mgS64NbUZmGWuuNKp5coY2GIj/zYDMJp6vQIgUueLFXv/eZ1ekgz2Oi67MNCk5jeTF2BurZqNLR3MSmUCIFT3Q6uHMtsB9Eha4u7hS31tj1UWE+D+ADzp59MGnoftAiBeHT7gDMuqeJHPL4b+kC+gzV4FGTfhR9q3tTbklZkD2A==
+  # 验证码
+  captcha:
+    # 邮箱验证码
+    email:
+      # 有效时间/秒
+      expire-time: 30
+  # 对象存储
+  minio:
+    # 控制台登录端口 http://kenaito-minio.odboy.local:19001
+    # 文件上传&预览端口 http://kenaito-minio.odboy.local:19000
+    endpoint: http://kenaito-minio.odboy.local:19000
+    access-key: minioadmin
+    secret-key: minioadmin
+    # 一定要在minio里面新建test，最好设置为公开
+    bucket-name: test
+    region: cn-shanghai
+    # 分享链接过期时间，单位天
+    share-expire-time: 7
+# 线程池
+task:
+  pool:
+    # 核心线程池大小
+    core-pool-size: 10
+    # 最大线程数
+    max-pool-size: 30
+    # 活跃时间
+    keep-alive-seconds: 60
+    # 队列容量
+    queue-capacity: 50
+# gitlab
+gitlab:
+  url: http://kenaito-gitlab.odboy.local:20080
+  # http://kenaito-gitlab.odboy.local:20080/-/profile/personal_access_tokens
+  access-token: KD86bMSx5pmRDVx-z6bU

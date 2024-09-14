@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="30 seconds" debug="false">
+    <!-- 增加如下的TLog MDC Listener -->
+    <contextListener class="com.yomahub.tlog.core.enhance.logback.TLogLogbackTTLMdcListener"/>
+    <!-- 定义日志文件的存储地址 勿在 LogBack 的配置中使用相对路径 -->
+    <property name="APP_NAME" value="kenaito-devops-service"/>
+    <!-- linux -->
+    <!--    <property name="LOG_HOME" value="/home/kenaito-devops-service/logs"/>-->
+    <!-- windows -->
+    <property name="LOG_HOME" value="C:/Users/Administrator/kenaito-devops-service/logs"/>
+    <property name="LOG_PATTERN"
+              value="%red(%d{yyyy-MM-dd HH:mm:ss.SSS}) %green([%thread]) %yellow([%X{tl}]) %highlight(%-5level) %boldMagenta(%logger{50}) - %msg%n"/>
+
+    <!--控制台日志-->
+    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <!--格式化输出：%d表示日期, %thread表示线程名, %-5level：级别从左显示5个字符宽度%msg：日志消息, %n是换行符-->
+            <!-- <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %X{tl} [%thread] %-5level %logger{50} - %msg%n</pattern> -->
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="AsyncConsole" class="com.yomahub.tlog.core.enhance.logback.async.AspectLogbackAsyncAppender">
+        <appender-ref ref="Console"/>
+    </appender>
+    <!--文件日志-->
+    <!--异步日志：一 先声明同步文件-->
+    <appender name="SyncLogFile2" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!--        <File>${LOG_HOME}/${APP_NAME}/logback-async-rolling.log</File>-->
+        <File>${LOG_HOME}/application.log</File>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!--日志文件输出的文件名-->
+            <FileNamePattern>${LOG_HOME}/application.log.%d{yyyy-MM-dd}.%i.log</FileNamePattern>
+            <!--日志文件保留天数-->
+            <MaxHistory>30</MaxHistory>
+            <!--日志文件大小-->
+            <maxFileSize>1000MB</maxFileSize>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <!--格式化输出：%d表示日期, %thread表示线程名, %-5level：级别从左显示5个字符宽度%msg：日志消息, %n是换行符-->
+            <!-- <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %X{tl} [%thread] %-5level %logger{50} - %msg%n</pattern> -->
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+    <!--异步日志：二 使用 AspectLogbackAsyncAppender 配置异步 -->
+    <appender name="AsyncLogFile" class="com.yomahub.tlog.core.enhance.logback.async.AspectLogbackAsyncAppender">
+        <discardingThreshold>0</discardingThreshold>
+        <queueSize>2048</queueSize>
+        <includeCallerData>true</includeCallerData>
+        <appender-ref ref="SyncLogFile2"/>
+    </appender>
+    <logger name="jdbc.resultset" level="ERROR" additivity="false">
+        <appender-ref ref="AsyncConsole"/>
+    </logger>
+    <!--  如想看到表格数据, 将OFF改为INFO  -->
+    <logger name="jdbc.resultsettable" level="OFF" additivity="false">
+        <appender-ref ref="AsyncConsole"/>
+    </logger>
+    <logger name="jdbc.connection" level="OFF" additivity="false">
+        <appender-ref ref="AsyncConsole"/>
+    </logger>
+    <logger name="jdbc.sqltiming" level="OFF" additivity="false">
+        <appender-ref ref="AsyncConsole"/>
+    </logger>
+    <logger name="jdbc.audit" level="OFF" additivity="false">
+        <appender-ref ref="AsyncConsole"/>
+    </logger>
+    <!-- 日志输出级别 -->
+    <root level="INFO">
+        <appender-ref ref="AsyncConsole"/>
+        <!--        <appender-ref ref="AsyncLogFile"/>-->
+    </root>
+</configuration>

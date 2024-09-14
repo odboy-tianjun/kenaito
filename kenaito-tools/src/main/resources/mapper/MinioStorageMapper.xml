@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.odboy.mapper.MinioStorageMapper">
+    <select id="findAll" resultType="cn.odboy.domain.MinioStorage$QueryPage">
+        select
+        *
+        from system_tool_minio_storage
+        <where>
+            <if test="criteria.blurry != null and criteria.blurry != ''">
+                AND (
+                file_name LIKE CONCAT('%',#{criteria.blurry},'%')
+                OR suffix LIKE CONCAT('%',#{criteria.blurry},'%')
+                OR create_by LIKE CONCAT('%',#{criteria.blurry},'%')
+                )
+            </if>
+            <if test="criteria.createTime != null and criteria.createTime.size() > 0">
+                AND update_time BETWEEN #{criteria.createTime[0]} AND #{criteria.createTime[1]}
+            </if>
+        </where>
+        ORDER BY id DESC
+    </select>
+</mapper>
