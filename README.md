@@ -2,7 +2,7 @@
 
 #### 项目简介
 
-基于 Spring Boot 2.6.4 、 Mybatis-Plus、 JWT、Spring Security、Redis、Vue
+基于 Spring Boot 2.7.18 、 Mybatis-Plus、 JWT、Spring Security、Redis、Vue
 
 **账号密码：** `admin / 123456`
 
